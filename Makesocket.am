@@ -1,0 +1,8 @@
+bin_PROGRAMS += _casmutils-multiplication-table
+
+_casmutils_transform_SOURCES =\
+						  plugins/casm-utilities-multiplication-table/group-to-mult-table.cpp
+
+_casmutils_multiplication_table_LDADD=\
+						libcasmutils.la
+

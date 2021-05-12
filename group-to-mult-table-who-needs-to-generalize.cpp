@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
+#include "casmutils/misc.hpp"
 #include <casmutils/definitions.hpp>
 #include <casmutils/xtal/structure.hpp>
 #include <casmutils/xtal/structure_tools.hpp>
@@ -15,31 +16,33 @@ namespace cu=casmutils;
 namespace std;
 
 //TODO:: turn these into headers instead of keeping it in the main.cpp
-//Do we want to make this with a CLI? or just as a function that can be accessed?
+//currently works for only point groups
 
 //general template for making mult table
-template <typename SymOpType, typename ComparatorType>
-//assumes a unitary comparator for now
-vector<vector<int>> make_mult_table(const vector<SymOpType>& group, ComparatorType comparator, const cu::xtal::Lattice& lattice) { //use comparator as an input to make this more general
-    //make vector of vectors
-    vector<vector<int>> output;
+template <typename SymOpType>
+//assumes a unitary comparator
+vector<vector<int>> make_mult_table(const vector<SymOpType>& group, const cu::xtal::Lattice& lattice) { //use comparator as an input to make this more general
+    vector<vector<int>> output; //the multiplication table output
 
-    //loop everything
     for(int i=0;i<group.size();i++) {
         vector<int> temp;
         for(int j=0,j<group.size(),j++) {
-            product = group[i] * group[j]; //SymOpType must have * defined for multiplication
+            product = group[i] * group[j];
             
+            /* point groups only
             // unitary compare function (input:product) compare to everything in group and output the label from group
-            //cu::sym::CartOpCompare_f comparator(product, 1e-5); //will need a different comparator bc lattice
-            //we have something that converts binary to unary comparator - cu/misc/hpp
-            //currently works for only point groups
+            cu::sym::CartOpCompare_f comparator(product, 1e-5); //will need a different comparator bc lattice
+            */
+            //binary -> unary comparator (in cu/misc.hpp)
+            cu::sym::BinaryCartOpPeriodicCompare_f binary_comp(lattice, 1e-5);
+            cu::misc::UnaryComparator_f<cu::sym::BinaryCartOpPeriodicCompare_f> CartOp_unary_comparator(product, tol);
+            
             //findif() returns an iterator to the spot in group
             auto iter = findif(group.begin(), group.end(), comparator(product,1e-5)) 
             int identity = distance(group.begin(),iter); //the mapped index of the new symop
 
             //output index to output row
-            temp.pushback(identity); //
+            temp.pushback(identity);
         }
         output.pushback(temp);
     }
@@ -47,10 +50,7 @@ vector<vector<int>> make_mult_table(const vector<SymOpType>& group, ComparatorTy
 }
 
 void print_nicely(const vector<vector<int>>& mult_table) {
-    //print out mult_table - using ptr to save memory
-    //iterate through and print nicely
-    //print with nice headers on row/col
-    //leave as numbers
+    //print multiplication table with nice headers on row/col
     /*
     input:5 4 3 2 1
             4 3 2 1 5
@@ -66,7 +66,6 @@ void print_nicely(const vector<vector<int>>& mult_table) {
     4|
     5|
     */
-
     cout << "*| ";
     for(int k=0; k<mult_table[0].size(); k++) { cout << k << " "; }
     cout << endl << "---";
@@ -96,13 +95,14 @@ int main(int argc, char* argv[]) {
 
     //read group from file
     cu::fs::path input_group_path;
+    cu::fs::path input_lattice_path;
 
     //TODO::actually read in the input_group 
-    vector<cu::sym::CartOp> input_group;
+    vector<cu::sym::CartOp> input_group = ;
     
     //reads lattice
     //TODO::actually read in the lattice
-    cu::xtal::Lattice input_lattice;
+    cu::xtal::Lattice input_lattice=cu::xtal::Structure::from_poscar(input_lattice_path);
     
     //make mult table its own function: 
     mult_table = make_mult_table(input_group, cu::sym::CartOpCompare_f comparator, input_lattice);

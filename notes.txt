@@ -1,0 +1,5 @@
+vector<cu::sym::CartOp> group_name; //this is a group
+class CartOp: - rot, mirror, glide, screw
+//contain SymOp - rot, mirror, inversion
+    //SymOp also contains translation - (allows for glide/screw)
+    //and time-reversal boolean
